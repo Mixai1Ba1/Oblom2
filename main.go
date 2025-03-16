@@ -86,8 +86,8 @@ func startLevel1(button *widget.Button, results *widget.Label, window fyne.Windo
 		time.Sleep(delay)
 
 		// Фиксированное расстояние от кнопки
-		cursorX := 400                               // Фиксированная позиция по X
-		cursorY := (windowHeight - buttonHeight) / 2 // Та же высота, что и у кнопки
+		cursorX := 400 // Фиксированная позиция по X
+		cursorY := 670 // Та же высота, что и у кнопки
 
 		// Перемещаем курсор в начальную позицию
 		robotgo.Move(cursorX, cursorY)
@@ -135,9 +135,9 @@ func startLevel2(button *widget.Button, results *widget.Label, window fyne.Windo
 		time.Sleep(delay)
 
 		// Случайное расстояние от курсора до кнопки
-		distance := rand.Intn(600) + 100             // От 100 до 700 пикселей
-		cursorX := 50 + distance                     // Начальная позиция курсора
-		cursorY := (windowHeight - buttonHeight) / 2 // Та же высота, что и у кнопки
+		distance := rand.Intn(600) + 100 // От 100 до 700 пикселей
+		cursorX := 50 + distance         // Начальная позиция курсора
+		cursorY := 670                   // Та же высота, что и у кнопки
 
 		// Перемещаем курсор в начальную позицию
 		robotgo.Move(cursorX, cursorY)
