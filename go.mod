@@ -5,11 +5,18 @@ go 1.23.1
 require (
 	fyne.io/fyne/v2 v2.5.5
 	github.com/go-vgo/robotgo v0.110.6
+	gonum.org/v1/plot v0.15.2
 )
 
 require (
+	codeberg.org/go-fonts/liberation v0.4.1 // indirect
+	codeberg.org/go-latex/latex v0.0.1 // indirect
+	codeberg.org/go-pdf/fpdf v0.10.0 // indirect
 	fyne.io/systray v1.11.0 // indirect
+	git.sr.ht/~sbinet/gg v0.6.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
+	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b // indirect
+	github.com/campoy/embedmd v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dblohm7/wingoes v0.0.0-20240820181039-f2b84150679e // indirect
 	github.com/ebitengine/purego v0.8.2 // indirect
@@ -25,6 +32,7 @@ require (
 	github.com/go-text/render v0.2.0 // indirect
 	github.com/go-text/typesetting v0.2.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jeandeaual/go-locale v0.0.0-20240223122105-ce5225dcaa49 // indirect
 	github.com/jezek/xgb v1.1.1 // indirect

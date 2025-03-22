@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color" // Импортируем пакет для работы с цветами
 	"math"
 	"math/rand"
 	"time"
@@ -11,6 +12,9 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/go-vgo/robotgo"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/vg"
 )
 
 const (
@@ -21,7 +25,9 @@ const (
 )
 
 var (
-	resultsText = "" // Переменная для хранения текста результатов
+	resultsText    = ""          // Переменная для хранения текста результатов
+	reactionTimes  []float64     // Массив для хранения времени реакции
+	fittsTimes     []float64     // Массив для хранения времени по Фиттсу
 )
 
 func main() {
@@ -46,6 +52,8 @@ func main() {
 	levelSelector := widget.NewSelect([]string{"Уровень 1", "Уровень 2", "Уровень 3"}, func(selected string) {
 		results.SetText("") // Очищаем результаты при смене уровня
 		resultsText = ""    // Очищаем текстовую переменную
+		reactionTimes = nil // Очищаем массив времени реакции
+		fittsTimes = nil    // Очищаем массив времени по Фиттсу
 		button.Show()       // Показываем кнопку
 		switch selected {
 		case "Уровень 1":
@@ -78,6 +86,55 @@ func calculateFittsTime(distance, width float64) float64 {
 	return 50 + 150*math.Log2(distance/width+1)
 }
 
+// Функция для создания и сохранения графика
+func savePlot(level string) {
+	p := plot.New()
+
+	p.Title.Text = "График времени реакции"
+	p.X.Label.Text = "Номер попытки"
+	p.Y.Label.Text = "Время (мс)"
+
+	// Создаем данные для фактического времени реакции
+	actualPoints := make(plotter.XYs, len(reactionTimes))
+	for i, v := range reactionTimes {
+		actualPoints[i].X = float64(i + 1)
+		actualPoints[i].Y = v
+	}
+
+	// Создаем данные для времени по Фиттсу
+	fittsPoints := make(plotter.XYs, len(fittsTimes))
+	for i, v := range fittsTimes {
+		fittsPoints[i].X = float64(i + 1)
+		fittsPoints[i].Y = v
+	}
+
+	// Создаем график для фактического времени реакции
+	actualLine, err := plotter.NewLine(actualPoints)
+	if err != nil {
+		panic(err)
+	}
+	actualLine.Color = color.RGBA{R: 255, G: 0, B: 0, A: 255} // Красный цвет
+
+	// Создаем график для времени по Фиттсу
+	fittsLine, err := plotter.NewLine(fittsPoints)
+	if err != nil {
+		panic(err)
+	}
+	fittsLine.Color = color.RGBA{R: 0, G: 0, B: 255, A: 255} // Синий цвет
+
+	// Добавляем графики на один plot
+	p.Add(actualLine, fittsLine)
+	p.Legend.Add("Фактическое время", actualLine)
+	p.Legend.Add("Время по Фиттсу", fittsLine)
+
+	// Сохраняем график в файл
+	if err := p.Save(6*vg.Inch, 4*vg.Inch, level+"_reaction_times.png"); err != nil {
+		panic(err)
+	}
+}
+
+
+
 // Уровень 1: Курсор появляется на фиксированном расстоянии от кнопки
 func startLevel1(button *widget.Button, results *widget.Label, window fyne.Window) {
 	for i := 0; i < 10; i++ {
@@ -102,15 +159,17 @@ func startLevel1(button *widget.Button, results *widget.Label, window fyne.Windo
 				clicked = true
 
 				// Фиксируем время клика
-				reactionTime := time.Since(startTime)
+				reactionTime := time.Since(startTime).Seconds() * 1000 // В миллисекундах
+				reactionTimes = append(reactionTimes, reactionTime)
 
 				// Вычисляем время по формуле Фиттса
 				distance := float64(cursorX - 50) // Расстояние от начальной позиции до кнопки
 				width := float64(buttonWidth)
 				fittsTime := calculateFittsTime(distance, width)
+				fittsTimes = append(fittsTimes, fittsTime)
 
 				// Обновляем результаты
-				resultsText += fmt.Sprintf("Нажатие №%d\nВремя реакции: %v\nВремя по Фиттсу: %v мс\n\n", i+1, reactionTime, fittsTime)
+				resultsText += fmt.Sprintf("Нажатие №%d\nВремя реакции: %.2f мс\nВремя по Фиттсу: %.2f мс\n\n", i+1, reactionTime, fittsTime)
 				results.SetText(resultsText)
 			}
 		}
@@ -120,6 +179,9 @@ func startLevel1(button *widget.Button, results *widget.Label, window fyne.Windo
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
+
+	// Сохраняем график
+	savePlot("Уровень 1")
 
 	// После 10 попыток скрываем кнопку и выводим сообщение
 	button.Hide()
@@ -152,14 +214,16 @@ func startLevel2(button *widget.Button, results *widget.Label, window fyne.Windo
 				clicked = true
 
 				// Фиксируем время клика
-				reactionTime := time.Since(startTime)
+				reactionTime := time.Since(startTime).Seconds() * 1000 // В миллисекундах
+				reactionTimes = append(reactionTimes, reactionTime)
 
 				// Вычисляем время по формуле Фиттса
 				width := float64(buttonWidth)
 				fittsTime := calculateFittsTime(float64(distance), width)
+				fittsTimes = append(fittsTimes, fittsTime)
 
 				// Обновляем результаты
-				resultsText += fmt.Sprintf("Нажатие №%d\nВремя реакции: %v\nВремя по Фиттсу: %v мс\nРасстояние: %v px\n\n", i+1, reactionTime, fittsTime, distance)
+				resultsText += fmt.Sprintf("Нажатие №%d\nВремя реакции: %.2f мс\nВремя по Фиттсу: %.2f мс\nРасстояние: %v px\n\n", i+1, reactionTime, fittsTime, distance)
 				results.SetText(resultsText)
 			}
 		}
@@ -169,6 +233,9 @@ func startLevel2(button *widget.Button, results *widget.Label, window fyne.Windo
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
+
+	// Сохраняем график
+	savePlot("Уровень 2")
 
 	// После 10 попыток скрываем кнопку и выводим сообщение
 	button.Hide()
@@ -205,14 +272,16 @@ func startLevel3(button *widget.Button, results *widget.Label, window fyne.Windo
 				clicked = true
 
 				// Фиксируем время клика
-				reactionTime := time.Since(startTime)
+				reactionTime := time.Since(startTime).Seconds() * 1000 // В миллисекундах
+				reactionTimes = append(reactionTimes, reactionTime)
 
 				// Вычисляем время по формуле Фиттса
 				width := float64(buttonWidth)
 				fittsTime := calculateFittsTime(distance, width)
+				fittsTimes = append(fittsTimes, fittsTime)
 
 				// Обновляем результаты
-				resultsText += fmt.Sprintf("Нажатие №%d\nВремя реакции: %v\nВремя по Фиттсу: %v мс\nРасстояние: %v px\n\n", i+1, reactionTime, fittsTime, distance)
+				resultsText += fmt.Sprintf("Нажатие №%d\nВремя реакции: %.2f мс\nВремя по Фиттсу: %.2f мс\nРасстояние: %.2f px\n\n", i+1, reactionTime, fittsTime, distance)
 				results.SetText(resultsText)
 			}
 		}
@@ -222,6 +291,9 @@ func startLevel3(button *widget.Button, results *widget.Label, window fyne.Windo
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
+
+	// Сохраняем график
+	savePlot("Уровень 3")
 
 	// После 10 попыток скрываем кнопку и выводим сообщение
 	button.Hide()
